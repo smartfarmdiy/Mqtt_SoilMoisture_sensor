@@ -3,26 +3,20 @@
 
 
 // Change the credentials below, so your ESP8266 connects to your router
-const char* ssid  = "NAPHAT_2.4G";
-const char* password = "0636768476";
+const char* ssid  = "yourssid";
+const char* password = "yourpassword";
 
 // Change the variable to your Raspberry Pi IP address, so it connects to your MQTT broker
-const char* mqtt_server = "mqtt.eclipse.org";
+const char* mqtt_server = "yourmqtt";
 
-char auth[]="e9733f00-829a-11ea-a505-873d744be10f";
+char auth[]="yourtokenid";
 
 // Initializes the espClient. You should change the espClient name if you have multiple ESPs running in your home automation system
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-// DHT Sensor - GPIO 5 = D1 on ESP-12E NodeMCU board
 
-//const int DHTPin = 0;
-
-// Lamp - LED - GPIO 4 = D2 on ESP-12E NodeMCU board
-
-const int lamp = 2;
-//DHT dht(DHTPin, DHTTYPE);
+const int state = 2;
 
 
 
@@ -30,7 +24,7 @@ const int lamp = 2;
 long now = millis();
 long lastMeasure = 0;
 
-// Don't change the function below. This functions connects your ESP8266 to your router
+
 void setup_wifi() {
   delay(10);
   // We start by connecting to a WiFi network
@@ -47,9 +41,7 @@ void setup_wifi() {
   Serial.println(WiFi.localIP());
 }
 
-// This functions is executed when some device publishes a message to a topic that your ESP8266 is subscribed to
-// Change the function below to add logic to your program, so when a device publishes a message to a topic that 
-// your ESP8266 is subscribed you can actually do something
+
 void callback(String topic, byte* message, unsigned int length) {
   Serial.print("Message arrived on topic: ");
   Serial.print(topic);
@@ -64,15 +56,15 @@ void callback(String topic, byte* message, unsigned int length) {
 
   // Feel free to add more if statements to control more GPIOs with MQTT
 
-  // If a message is received on the topic room/lamp, you check if the message is either on or off. Turns the lamp GPIO according to the message
-  if(topic=="kalasintofarmo/lamp"){
-      Serial.print("Changing Room lamp to ");
+  // If a message is received on the topic state led , you check if the message is either on or off. Turns the lamp GPIO according to the message
+  if(topic=="farmor/sensorsoil"){
+      Serial.print("Changing to ");
       if(messageTemp == "on"){
-        digitalWrite(lamp, HIGH);
+        digitalWrite(state, HIGH);
         Serial.print("On");
       }
       else if(messageTemp == "off"){
-        digitalWrite(lamp, LOW);
+        digitalWrite(state, LOW);
         Serial.print("Off");
       }
   }
@@ -91,7 +83,7 @@ void reconnect() {
       Serial.println("connected");  
       // Subscribe or resubscribe to a topic
       // You can subscribe to more topics (to control more LEDs in this example)
-      client.subscribe("kalasintofarmo/lamp");
+      client.subscribe("farmor/sensorsoil");
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -124,11 +116,11 @@ void loop() {
     client.connect("farming32Client");
 
   now = millis();
-  // Publishes new temperature and humidity every 30 seconds
+  
   if (now - lastMeasure > 30000) {
     lastMeasure = now;
     // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
-    int soils = analogRead(A0);;
+    int soils = analogRead(A0); // analoge value depend on moisture
     
     
 
@@ -140,7 +132,7 @@ void loop() {
    
 
 
-    // Publishes Temperature and Humidity values
+    // Publishes soilmoisture values
    char attributes[100];
   
    payloadaa.toCharArray( attributes, 100 );
@@ -148,12 +140,10 @@ void loop() {
    client.publish("outputkalac9/smartfarmy", attributes );
    
     
-    Serial.print("soilmuisture: ");
+    Serial.print("soilmoisture: ");
     Serial.println(soils);
    
-    //Serial.print(hic);
-    //Serial.println(" *C ");
-    // Serial.print(hif);
-    // Serial.println(" *F");
+    //read value 0-150% of moisture extraction
+   
   }
 } 
